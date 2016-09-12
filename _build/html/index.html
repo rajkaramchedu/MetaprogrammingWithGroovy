@@ -60,21 +60,24 @@
 <ol class="upperalpha simple">
 <li>RUN TIME METAPROGRAMMING</li>
 </ol>
-<p>(1) In Groovy, there&#8217;s an interface called  GroovyObject. It is defined as:
-public interface GroovyObject{</p>
+<ol class="arabic simple">
+<li>In Groovy, there&#8217;s an interface called  GroovyObject. It is defined as:</li>
+</ol>
+<p>:: public interface GroovyObject{</p>
 <blockquote>
 <div>MetaClass getMetaClass();
 Object getProperty(String propertyName)
 Object invokeMethod(String name, Object args)
 void setMetaClass(MetaClass metaClass)
 void setProperty(String propertyName, Object newValue)</div></blockquote>
-<p>}
-Every Groovy object implements this GroovyObject interface.
+<p>}</p>
+<p>Every Groovy object implements this GroovyObject interface.
 For example, if you compile Test.groovy that has this code:
+::
 class Sidonia {
-}
-it will result in Sidonia.class that has
-public class Sidonia implements GroovyObject {...}</p>
+}</p>
+<p>it will result in Sidonia.class that has
+::public class Sidonia implements GroovyObject {...}</p>
 <p>2) Now let&#8217;s see how we can call a method even if that method doesn&#8217;t exist
 2.1) &#8212;method exists, will run okay&#8211;
 package com.rajkaramchedu</p>

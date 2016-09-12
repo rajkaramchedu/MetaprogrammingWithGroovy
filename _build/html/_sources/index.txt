@@ -30,7 +30,8 @@ First thing you have to do is to learn how to write your own MOP.  Remember MOP 
 A) RUN TIME METAPROGRAMMING
 
 (1) In Groovy, there's an interface called  GroovyObject. It is defined as:
-public interface GroovyObject{
+
+:: public interface GroovyObject{
 	
 	MetaClass getMetaClass();
 	Object getProperty(String propertyName)
@@ -38,12 +39,16 @@ public interface GroovyObject{
 	void setMetaClass(MetaClass metaClass)
 	void setProperty(String propertyName, Object newValue)
 }
+
 Every Groovy object implements this GroovyObject interface. 
 For example, if you compile Test.groovy that has this code:
+::
 class Sidonia {
 }
+
 it will result in Sidonia.class that has
-public class Sidonia implements GroovyObject {...}
+::public class Sidonia implements GroovyObject {...}
+
 
 2) Now let's see how we can call a method even if that method doesn't exist
 2.1) ---method exists, will run okay--
