@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Metaprogramming Tutorial Draft &#8212; stgroovy 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="stgroovy 1.0 documentation" href="#" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="metaprogramming-tutorial-draft">
+<h1>Metaprogramming Tutorial Draft<a class="headerlink" href="#metaprogramming-tutorial-draft" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+<p>Groovy (is a dynamic language that) supports metaprogramming capabilities to make changes to the program itself during runtime. What are these changes? Changes like adding methods and properties, intercepting method calls, getting and setting properties. The principal difference between Groovy and a language that does not support metaprogramming is that with Groovy it is possible to adapt the program during runtime.</p>
+<p>When a Groovy programmer wants to infuse a capability into a Groovy program such that this program can change itself during runtime or compile time, then this programmer would make explicit use of metaprogramming features supported by Groovy.</p>
+<p>Groovy compiler and runtime engine (&#8220;engine&#8221;) follows a particular flow in handling what&#8217;s written in a Groovy program. In particular, if the engine sees a specific kind of a method call  &lt;&gt; The entire Groovy system is built to support this metaprogramming capability: the Groovy language has meta classes, meta objects and the Groovy engine itself will follow a specific set of rules. At the same time, this engine imposes certain obligations on the programmer to use these language features in a certain way. &lt;expectations&gt;  This combination of meta classes, meta objects and the rules followed by Groovy engine is pulled together into a concept known as MOP (meta object protocol). In other words, the Groovy engine says, &#8220;Here are metaprogramming features the Groovy language has, and when I see one of these in your program, I will consult the MOP and this MOP will then tell me what rules I should follow.&#8221;</p>
+<p>When you write a Groovy metaprogram, you are doing two things: you are writing your Groovy program, and you are also designing your own variation of MOP, i.e., you are customizing the MOP.</p>
+<p>Groovy engine can call a method even if this method is not in a Groovy object, or it can get and set a property, etc. Each such</p>
+<p>First thing you have to do is to learn how to write your own MOP.  Remember MOP is a protocol that dictates the behavior of Groovy engine. The way you can customize this behavior is to put in a few hooks into the MOP. But to do this, we need to understand a few basics of a Groovy class and a Groovy object.</p>
+<ol class="upperalpha simple">
+<li>RUN TIME METAPROGRAMMING</li>
+</ol>
+<p>(1) In Groovy, there&#8217;s an interface called  GroovyObject. It is defined as:
+public interface GroovyObject{</p>
+<blockquote>
+<div>MetaClass getMetaClass();
+Object getProperty(String propertyName)
+Object invokeMethod(String name, Object args)
+void setMetaClass(MetaClass metaClass)
+void setProperty(String propertyName, Object newValue)</div></blockquote>
+<p>}
+Every Groovy object implements this GroovyObject interface.
+For example, if you compile Test.groovy that has this code:
+class Sidonia {
+}
+it will result in Sidonia.class that has
+public class Sidonia implements GroovyObject {...}</p>
+<p>2) Now let&#8217;s see how we can call a method even if that method doesn&#8217;t exist
+2.1) &#8212;method exists, will run okay&#8211;
+package com.rajkaramchedu</p>
+<dl class="docutils">
+<dt>/**</dt>
+<dd><ul class="first simple">
+<li>Created by RajkMacPro on 9/11/16.</li>
+</ul>
+<p class="last"><a href="#id1"><span class="problematic" id="id2">*</span></a>/</p>
+</dd>
+</dl>
+<p>class InvokeDemo {</p>
+<blockquote>
+<div><p>def test() {</p>
+<blockquote>
+<div>return &#8220;Method exists&#8221;</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+<p>def invokeDemo = new InvokeDemo()
+assert invokeDemo.test() == &#8220;Method exists&#8221;
+&#8212;&#8211;
+2.2) method does not exist, call to method fails
+However, if we try to invoke a method such as someMethod(), which is not defined in the class, it will fail, as we expect it should.</p>
+<p>def invokeDemo = new InvokeDemo()
+assert invokeDemo.test() == &#8220;Method exists&#8221;
+assert invokeDemo.someMethod() == &#8220;Called invokeMethod someMethod()&#8221;</p>
+<p>The above code will fail with the error message:</p>
+<p>Caught: groovy.lang.MissingMethodException: No signature of method: com.rajkaramchedu.InvokeDemo.someMethod() is applicable for argument types: () values: []</p>
+<p>2.3) method does not exist, call to method does not fail with metaprogramming</p>
+<dl class="docutils">
+<dt>/**</dt>
+<dd><ul class="first simple">
+<li>Created by RajkMacPro on 9/11/16.</li>
+</ul>
+<p class="last"><a href="#id3"><span class="problematic" id="id4">*</span></a>/</p>
+</dd>
+</dl>
+<p>class InvokeDemo {</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>def invokeMethod (String name, Object args){</dt>
+<dd>return &#8220;Called invokeMethod $name $args&#8221;</dd>
+</dl>
+<p>}</p>
+<p>def test() {</p>
+<blockquote>
+<div>return &#8220;Method exists&#8221;</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+<p>def invokeDemo = new InvokeDemo()
+assert invokeDemo.test() == &#8220;Method exists&#8221;
+assert invokeDemo.someMethod() == &#8220;Called invokeMethod someMethod []&#8221;
+&#8212;&#8212;&#8212;&#8211;
+This above code runs okay because we&#8217;ve implemented the invokeMethod() &lt;insert the bottom flow chart section only&gt;</p>
+<p>Note: Did not cover methodMissing() method.</p>
+<p>2.3.1) We can add methods and properties to a Groovy class during runtime. Let&#8217;s see how this is done. This below code fails for obvious reasons because we are not using any metaprogramming protocol.</p>
+<dl class="docutils">
+<dt>/**</dt>
+<dd><ul class="first simple">
+<li>Created by RajkMacPro on 9/11/16.</li>
+</ul>
+<p class="last"><a href="#id5"><span class="problematic" id="id6">*</span></a>/</p>
+</dd>
+</dl>
+<p>class TutMetaClass {
+}
+TutMetaClass sid = new TutMetaClass()
+sid.metaClass.name = &#8220;Sid&#8221;
+sid.whoAreYou = { -&gt; println &#8220;$name is a Knight of Sidonia&#8221;}
+sid.whoAreYou()
+&#8212;
+It fails because we are trying to assign a variable &#8220;Sid&#8221; to a property name that is not defined on sid object, and also we are trying to assign a closure to a method whoAreYou() that is not defined on sid object.</p>
+<p>2.3.2) Groovy supports what is called as a MetaClass. Every Groovy class has a MetaClass that defines the behavior of that Groovy class. Moreover, every MetaClass is an Expando class, and that means we can extend the MetaClass of our TutMetaClass by calling its MetaClass and assigning methods and properties to that MetaClass. This works on an instance basis.</p>
+<p>&#8212;
+class TutMetaClass {
+}</p>
+<p>TutMetaClass sid = new TutMetaClass()</p>
+<p>sid.metaClass.name = &#8220;Sid&#8221;
+sid.metaClass.whoAreYou = { -&gt; println &#8220;$name is a Knight of Sidonia&#8221;}
+sid.whoAreYou()
+&#8212;
+This runs okay with the result as below:</p>
+<p>Sid is a Knight of Sidonia
+Process finished with exit code 0</p>
+<p>2.3.3) DANGER!!</p>
+<p>class TutMetaClass {
+}</p>
+<p>TutMetaClass sid = new TutMetaClass()</p>
+<p>sid.metaClass.name = &#8220;Sid&#8221;
+sid.metaClass.whoAreYou = { -&gt; println &#8220;$name is a Knight of Sidonia&#8221;}
+sid.whoAreYou()</p>
+<p>//Danger!!
+String.metaClass.loud = { -&gt; toUpperCase() }
+println &#8220;I am a Knight of Sidonia&#8221;.loud()
+&#8212;&#8211;
+Results in the below output:</p>
+<p>Sid is a Knight of Sidonia
+I AM A KNIGHT OF SIDONIA</p>
+<div class="section" id="process-finished-with-exit-code-0">
+<h3>Process finished with exit code 0<a class="headerlink" href="#process-finished-with-exit-code-0" title="Permalink to this headline">¶</a></h3>
+<p>Because we manipulated the String class via its MetaClass. We have to be careful with the power of accessing the MetaClass.</p>
+<p>2.4) accessing the property defined in the class. works fine.</p>
+<p>package com.rajkaramchedu</p>
+<dl class="docutils">
+<dt>/**</dt>
+<dd><ul class="first simple">
+<li>Created by RajkMacPro on 9/11/16.</li>
+</ul>
+<p class="last"><a href="#id7"><span class="problematic" id="id8">*</span></a>/</p>
+</dd>
+</dl>
+<p>class PropertyDemo {</p>
+<blockquote>
+<div>def prop1 = &#8220;prop1&#8221;
+def prop2 = &#8220;prop2&#8221;
+def prop3 = &#8220;prop3&#8221;</div></blockquote>
+<p>}</p>
+<p>def pd = new PropertyDemo()
+println pd.prop1
+println pd.prop2
+println pd.prop3
+&#8212;
+the above code runs fine with the below output
+prop1
+prop2
+prop3
+Process finished with exit code 0</p>
+<p>2.5) How about accessing a property that&#8217;s not defined on the class? We can do that with metaprogramming. We just have to intercept the default getter of the property with our own implementation of getProperty(), as below.
+ackage com.rajkaramchedu</p>
+<dl class="docutils">
+<dt>/**</dt>
+<dd><ul class="first simple">
+<li>Created by RajkMacPro on 9/11/16.</li>
+</ul>
+<p class="last"><a href="#id9"><span class="problematic" id="id10">*</span></a>/</p>
+</dd>
+</dl>
+<p>class PropertyDemo {</p>
+<blockquote>
+<div><p>def prop1 = &#8220;prop1&#8221;
+def prop2 = &#8220;prop2&#8221;
+def prop3 = &#8220;prop3&#8221;</p>
+<p>def getProperty(String name) {</p>
+<blockquote>
+<div>println &#8220;Overriden with getProperty() called with argument $name&#8221;</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+<p>def pd = new PropertyDemo()
+println pd.prop1
+println pd.prop2
+println pd.prop3
+println pd.prop4
+&#8212;&#8211;
+The above code runs with the below results.
+Overriden with getProperty() called with argument prop1
+null
+Overriden with getProperty() called with argument prop2
+null
+Overriden with getProperty() called with argument prop3
+null
+Overriden with getProperty() called with argument prop4
+null
+Process finished with exit code 0</p>
+<p>Because we are routing all property access requests by explicitly implementing our own getProperty() method, all property access requests through it. The &#8220;null&#8221; output in the output is because the default getter is not returning anything because we are completely bypassing it.</p>
+</div>
+<div class="section" id="another-way-of-dealing-with-accessing-missing-property-is-by-implementing-the-propertymissing-method">
+<h3>2.6) Another way of dealing with accessing missing property is by implementing the propertyMissing() method.<a class="headerlink" href="#another-way-of-dealing-with-accessing-missing-property-is-by-implementing-the-propertymissing-method" title="Permalink to this headline">¶</a></h3>
+<p>package com.rajkaramchedu</p>
+<dl class="docutils">
+<dt>/**</dt>
+<dd><ul class="first simple">
+<li>Created by RajkMacPro on 9/11/16.</li>
+</ul>
+<p class="last"><a href="#id11"><span class="problematic" id="id12">*</span></a>/</p>
+</dd>
+</dl>
+<p>class PropertyDemo {</p>
+<blockquote>
+<div>def prop1 = &#8220;prop1&#8221;
+def prop2 = &#8220;prop2&#8221;
+def prop3 = &#8220;prop3&#8221;</div></blockquote>
+<p>//    def getProperty(String name) {
+//
+//        println &#8220;Overriden with getProperty() called with argument $name&#8221;
+//    }</p>
+<blockquote>
+<div><p>def propertyMissing(String name) {</p>
+<blockquote>
+<div>&#8220;Caught missing property: $name&#8221;</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+<p>def pd = new PropertyDemo()
+println pd.prop1
+println pd.prop2
+println pd.prop3
+println pd.prop4
+&#8212;&#8212;&#8211;
+The above code runs with below results:
+prop2
+prop3
+Caught missing property: prop4
+Process finished with exit code 0</p>
+<p>Groovy supports this interception for failing properties.</p>
+<ol class="upperalpha simple" start="2">
+<li>COMPILE TIME METAPROGRAMMING</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Metaprogramming Tutorial Draft</a><ul>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a><ul>
+<li><a class="reference internal" href="#process-finished-with-exit-code-0">Process finished with exit code 0</a></li>
+<li><a class="reference internal" href="#another-way-of-dealing-with-accessing-missing-property-is-by-implementing-the-propertymissing-method">2.6) Another way of dealing with accessing missing property is by implementing the propertyMissing() method.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RK.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/index.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
