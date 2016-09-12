@@ -2,4 +2,4 @@
 Metaprogramming Tutorial Draft
 ==============================
 
-Groovy (is a dynamic language that) supports metaprogramming capabilities to make changes to the program itself during runtime. What are these changes? Changes like adding methods and properties, intercepting method calls, getting and setting properties. The principal difference between Groovy and a language that does not support metaprogramming is that with Groovy it is possible to adapt the program during runtime.
+Groovy (is a dynamic language that) supports metaprogramming capabilities to make changes to the program itself during runtime. What are these changes? Changes like adding methods and properties, intercepting method calls, getting and setting properties. The principal difference between Groovy and a language that does not support metaprogramming is that with Groovy it is possible to adapt the program during runtime..
