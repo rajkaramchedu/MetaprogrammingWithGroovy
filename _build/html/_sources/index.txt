@@ -29,7 +29,7 @@ First thing you have to do is to learn how to write your own MOP.  Remember MOP 
 
 A) RUN TIME METAPROGRAMMING
 
-(1) In Groovy, there's an interface called  GroovyObject. It is defined as:
+(1) In Groovy, there's an interface called  GroovyObject. It is defined as follows.
 
 :: public interface GroovyObject{
 	
